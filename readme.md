@@ -1,5 +1,5 @@
 # ShipStation.ai Custom Domain Service
-Check out [ShipStation.ai](https://shipstation.ai) and [Github](https://github.com/daytimedrinkingclub/shipstation)
+Check out [ShipStation.ai](https://shipstation.ai) and [ShipStation Github](https://github.com/daytimedrinkingclub/shipstation)
 
 This service handles custom domain routing for ShipStation.ai projects, serving websites from Supabase storage based on domain mappings stored in a Supabase database.
 
@@ -7,7 +7,7 @@ This service handles custom domain routing for ShipStation.ai projects, serving 
 
 - Dynamic custom domain handling
 - Content serving from Supabase storage
-- Redis caching for improved performance
+- Redis caching for improved performance (included in Docker Compose)
 - SSL support via Traefik
 - Designed for deployment on Coolify
 
@@ -15,7 +15,6 @@ This service handles custom domain routing for ShipStation.ai projects, serving 
 
 - Coolify instance
 - Supabase account and project
-- Redis instance
 - Traefik (configured in Coolify)
 
 ## Configuration
@@ -25,8 +24,6 @@ This service handles custom domain routing for ShipStation.ai projects, serving 
    ```
    SUPABASE_URL=your_supabase_url
    SUPABASE_KEY=your_supabase_key
-   REDIS_HOST=your_redis_host
-   REDIS_PORT=your_redis_port
    SUPABASE_BUCKET=your_supabase_bucket
    ```
 
@@ -35,7 +32,8 @@ This service handles custom domain routing for ShipStation.ai projects, serving 
 1. Log in to your Coolify dashboard
 2. Create a new service and connect it to your repository
 3. Configure the environment variables in Coolify, using the values from your `.env` file
-4. Deploy the service through the Coolify dashboard
+4. Ensure that Coolify is set to use the `docker-compose.yml` file for deployment
+5. Deploy the service through the Coolify dashboard
 
 ## Usage
 
@@ -55,8 +53,13 @@ This service handles custom domain routing for ShipStation.ai projects, serving 
 - `index.js`: Main application file
 - `domainService.js`: Supabase interaction for domain mappings
 - `Dockerfile`: Docker image configuration
+- `docker-compose.yml`: Docker Compose configuration (includes Redis)
 - `.env`: Environment variables (not in version control)
 - `.env.example`: Example environment variable file
+
+## Redis Configuration
+
+Redis is included in the `docker-compose.yml` file and will be automatically set up when deploying through Coolify. No additional configuration is needed for Redis.
 
 ## License
 
