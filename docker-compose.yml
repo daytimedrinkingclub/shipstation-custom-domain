@@ -9,20 +9,27 @@ services:
       - REDIS_PORT=6379
       - SUPABASE_BUCKET=${SUPABASE_BUCKET}
     restart: unless-stopped
+    networks:
+      - coolify
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.domain-service.rule=HostRegexp(`{host:.+}`)"
-      - "traefik.http.routers.domain-service.entrypoints=websecure"
-      - "traefik.http.routers.domain-service.tls.certresolver=coolify"
+      - "traefik.http.routers.domain-service.entrypoints=https"
+      - "traefik.http.routers.domain-service.tls.certresolver=letsencrypt"
       - "traefik.http.services.domain-service.loadbalancer.server.port=80"
-    depends_on:
-      - redis
+      - "traefik.http.routers.domain-service.priority=1"
 
   redis:
     image: redis:alpine
     volumes:
       - redis-data:/data
     restart: unless-stopped
+    networks:
+      - coolify
 
 volumes:
   redis-data:
+
+networks:
+  coolify:
+    external: true

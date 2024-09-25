@@ -59,7 +59,7 @@ async function serveDomain(req, res, next) {
 app.use(serveDomain);
 
 // Start the server
-const port = process.env.PORT || 80;
-app.listen(port, () => {
+const port = 80;
+app.listen(port, '0.0.0.0', () => {
   console.log(`Domain service running on port ${port}`);
 });
