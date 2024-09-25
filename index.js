@@ -1,7 +1,7 @@
 const express = require("express");
-const greenlock = require("greenlock-express");
 const { createClient } = require("@supabase/supabase-js");
 const Redis = require("ioredis");
+const { getDomainMapping } = require("./domainService.js");
 
 require("dotenv").config();
 
@@ -25,30 +25,23 @@ async function serveDomain(req, res, next) {
 
   try {
     // Check Redis cache first
-    let slug = await redis.get(domain);
+    let shipSlug = await redis.get(domain);
 
-    if (!slug) {
-      // If not in cache, check Supabase
-      const { data, error } = await supabase
-        .from("custom_domains")
-        .select("ship_slug")
-        .eq("domain", domain)
-        .single();
-
-      if (error) throw error;
-
-      if (data) {
-        slug = data.ship_slug;
+    if (!shipSlug) {
+      // If not in cache, check Supabase using domainService
+      const mapping = await getDomainMapping(domain);
+      if (mapping) {
+        shipSlug = mapping.shipSlug;
         // Cache the result in Redis
-        await redis.set(domain, slug);
+        await redis.set(domain, shipSlug);
       }
     }
 
-    if (slug) {
+    if (shipSlug) {
       // Serve the website from Supabase storage
       const { data, error } = await supabase.storage
         .from(process.env.SUPABASE_BUCKET)
-        .download(`${slug}/index.html`);
+        .download(`${shipSlug}/index.html`);
 
       if (error) throw error;
 
@@ -65,54 +58,8 @@ async function serveDomain(req, res, next) {
 
 app.use(serveDomain);
 
-// Custom Greenlock store using Supabase
-const greenlockStore = {
-  // Implement the required methods for Greenlock store
-  // using Supabase for storage
-  async get(opts) {
-    const { data, error } = await supabase
-      .from('greenlock_config')
-      .select('value')
-      .eq('key', opts.key)
-      .single();
-    
-    if (error) throw error;
-    return data ? JSON.parse(data.value) : null;
-  },
-  async put(opts) {
-    const { error } = await supabase
-      .from('greenlock_config')
-      .upsert({ key: opts.key, value: JSON.stringify(opts.value) });
-    
-    if (error) throw error;
-  },
-  async remove(opts) {
-    const { error } = await supabase
-      .from('greenlock_config')
-      .delete()
-      .eq('key', opts.key);
-    
-    if (error) throw error;
-  },
-};
-
-// Configure Greenlock
-greenlock
-  .init({
-    packageRoot: __dirname,
-    configDir: false, // Disable file-based config
-    maintainerEmail: process.env.MAINTAINER_EMAIL,
-    cluster: false,
-    store: greenlockStore,
-  })
-  .ready(httpsWorker);
-
-function httpsWorker(glx) {
-  const server = glx.httpsServer();
-  server.on("request", app);
-}
-
 // Start the server
-app.listen(80, () => {
-  console.log("HTTP server running on port 80");
+const port = process.env.PORT || 80;
+app.listen(port, () => {
+  console.log(`Domain service running on port ${port}`);
 });

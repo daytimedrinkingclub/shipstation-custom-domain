@@ -4,14 +4,16 @@ services:
     build: .
     ports:
       - "80:80"
-      - "443:443"
     environment:
       - SUPABASE_URL=${SUPABASE_URL}
       - SUPABASE_KEY=${SUPABASE_KEY}
       - REDIS_HOST=${REDIS_HOST}
       - REDIS_PORT=${REDIS_PORT}
       - SUPABASE_BUCKET=${SUPABASE_BUCKET}
-      - MAINTAINER_EMAIL=${MAINTAINER_EMAIL}
-    volumes:
-      - ./greenlock.d:/app/greenlock.d
     restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.domain-service.rule=HostRegexp(`{host:.+}`)"
+      - "traefik.http.routers.domain-service.entrypoints=websecure"
+      - "traefik.http.routers.domain-service.tls.certresolver=coolify"
+      - "traefik.http.services.domain-service.loadbalancer.server.port=80"
